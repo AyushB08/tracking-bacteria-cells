@@ -54,7 +54,7 @@ def get_num_bacteria(image_path):
             if rgb_values[i][a] != red and rgb_values[i][a] != pink and rgb_values[i][a] != gray:
                 rgb_values[i][a] = gray
 
-    # Fill in holes
+    # Fill in holes in border
 
     for row in range(height):
         for col in range(width):
@@ -85,11 +85,9 @@ def get_num_bacteria(image_path):
                                 col - 1] != gray:
                         rgb_values[row + 1][col] = red
 
-    # Set New Image
+    # Recursive Flood Fill replaces all gray background pixels with black
 
-    image = Image.new("RGB", (width, height))
-
-    def process_island(visited_squares, row, col, depth_limit=80000, current_depth=0):
+    def process_image(visited_squares, row, col, depth_limit=80000, current_depth=0):
         if row < 0 or row >= height or col < 0 or col >= width or [row, col] in visited_squares:
             return
 
@@ -101,18 +99,21 @@ def get_num_bacteria(image_path):
 
         rgb_values[row][col] = black
 
-        process_island(rgb_values, row - 1, col, depth_limit, current_depth + 1)  # Up
-        process_island(rgb_values, row + 1, col, depth_limit, current_depth + 1)  # Down
-        process_island(rgb_values, row, col - 1, depth_limit, current_depth + 1)  # Left
-        process_island(rgb_values, row, col + 1, depth_limit, current_depth + 1)  # Right
+        process_image(rgb_values, row - 1, col, depth_limit, current_depth + 1)  # Up
+        process_image(rgb_values, row + 1, col, depth_limit, current_depth + 1)  # Down
+        process_image(rgb_values, row, col - 1, depth_limit, current_depth + 1)  # Left
+        process_image(rgb_values, row, col + 1, depth_limit, current_depth + 1)  # Right
 
     visited_squares = []
-    process_island(visited_squares, 0, 0)
+    process_image(visited_squares, 0, 0)
+
+    image = Image.new("RGB", (width, height))
 
     for y in range(height):
         for x in range(width):
             image.putpixel((x, y), rgb_values[y][x])
 
+    # Save Processed Images
     """
     start_index = image_path.find("a/") + 2
     end_index = image_path.find(".", start_index)
@@ -132,8 +133,8 @@ def get_num_bacteria(image_path):
         return 0
 
     visited_pixels = []
-
     bacteria_count = []
+
     for row in range(height):
         for col in range(width):
             if rgb_values[row][col] == gray and 0 < row < height - 1 and 0 < col < width - 1 and [row,
@@ -142,6 +143,7 @@ def get_num_bacteria(image_path):
                 bacteria_count.append(num)
 
     bacteria = 0
+
     for i in range(len(bacteria_count)):
         if bacteria_count[i] > 50:
             bacteria += 1
@@ -151,10 +153,9 @@ def get_num_bacteria(image_path):
 
 def iterate_through_frames():
     with open('../solution/solution.txt', 'w') as file:
-        for i in range(39):
+        for i in range(40):
             count = get_num_bacteria("../bacteria/" + str(i) + ".png")
             file.write(str(count) + "\n")
 
 
 iterate_through_frames()
-#get_num_bacteria("../bacteria/" + str(17 + 1) + ".png")
